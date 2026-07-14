@@ -896,10 +896,10 @@
     <script>
         (function(){
             var loader=document.getElementById('site-loader');
+            if(!loader) return;
             requestAnimationFrame(function(){ loader.style.opacity='1'; });
 
-            // Bloquear scroll mientras el splash está visible (wheel/touch/teclado);
-            // se evita tocar overflow para no colapsar el espacio reservado del scrollbar.
+            // Bloquear scroll mientras el splash está visible (wheel/touch/teclado)
             function preventScrollKeys(e){
                 var keys=[32,33,34,35,36,37,38,39,40];
                 if(keys.indexOf(e.keyCode)>-1){ e.preventDefault(); }
@@ -914,38 +914,21 @@
                 window.removeEventListener('keydown', preventScrollKeys);
             }
 
+            var hidden=false;
             function hide(){
+                if(hidden) return; hidden=true;
                 loader.style.transition='transform 0.7s cubic-bezier(0.76,0,0.24,1), opacity 0.3s ease 0.4s';
                 loader.style.transform='translateX(-100%)';
                 loader.style.opacity='0';
                 setTimeout(function(){ loader.style.display='none'; }, 800);
-                setTimeout(unlockScroll, 1300);
+                setTimeout(unlockScroll, 800);
             }
-            var hidden=false;
-            function hideOnce(){ if(hidden) return; hidden=true; hide(); }
-            var MIN_DELAY=900, MAX_WAIT=6000, startedAt=Date.now();
-            function readyToHide(){
-                var remaining=Math.max(0, MIN_DELAY-(Date.now()-startedAt));
-                setTimeout(hideOnce, remaining);
-            }
-            function waitForVideo(){
-                var iframe=document.getElementById('heroVideoFrame');
-                if(!iframe || typeof Vimeo==='undefined'){ readyToHide(); return; }
-                try{
-                    var player=new Vimeo.Player(iframe);
-                    player.on('play', function(){ readyToHide(); });
-                }catch(e){ readyToHide(); }
-            }
-            function start(){
-                var vimeoScript=document.createElement('script');
-                vimeoScript.src='https://player.vimeo.com/api/player.js';
-                vimeoScript.onload=waitForVideo;
-                vimeoScript.onerror=readyToHide;
-                document.head.appendChild(vimeoScript);
-            }
-            if(document.readyState==='complete' || document.readyState==='interactive'){ start(); }
-            else{ document.addEventListener('DOMContentLoaded', start); }
-            setTimeout(hideOnce, MAX_WAIT);
+
+            // Splash de duración fija y confiable (NO depende del video del hero)
+            var SPLASH_TIME = 1500;
+            function run(){ setTimeout(hide, SPLASH_TIME); }
+            if(document.readyState==='complete' || document.readyState==='interactive'){ run(); }
+            else{ document.addEventListener('DOMContentLoaded', run); }
         })();
     </script>
     <!-- ═══════ FIN LOADER ═══════ -->
@@ -1354,7 +1337,7 @@
             <div class="flex flex-col lg:flex-row" style="min-height:100vh;min-height:100dvh;">
 
                 <!-- ══ BLOQUE IZQUIERDO: Clientes ══ -->
-                <div class="w-full lg:w-[58%] flex flex-col justify-start py-16 px-10 lg:px-16" style="background:#262626;">
+                <div class="w-full lg:w-[60%] flex flex-col justify-start py-16 px-10 lg:px-16" style="background:#262626;">
 
                     <!-- Label -->
                     <div class="mb-10 mt-8 lg:mt-14 reveal reveal-left text-center">
@@ -1389,7 +1372,7 @@
                 <!-- end bloque izquierdo clientes -->
 
                 <!-- ══ BLOQUE DERECHO: Testimonios ══ -->
-                <div class="w-full lg:w-[42%] flex flex-col py-16 px-10 lg:px-16 relative" style="background:#f8f8f8;">
+                <div class="w-full lg:w-[40%] flex flex-col py-16 px-10 lg:px-16 relative" style="background:#f8f8f8;">
 
                     <div class="mb-6 mt-8 lg:mt-14 reveal reveal-right relative z-10">
                         <span class="text-xs font-bold tracking-widest uppercase" style="color:rgba(255,255,255,0.55);">Lo que dicen</span>
@@ -1554,24 +1537,33 @@
                         <form class="space-y-5" @submit.prevent="submitContactForm($event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                                 <div class="flex flex-col group/field">
-                                    <label class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-medium transition-colors duration-300 group-focus-within/field:text-[#f08125]">Nombre</label>
-                                    <input type="text" placeholder="Tu nombre" class="form-field-gsc bg-white border-0 border-b border-gray-200 px-0 py-2.5 text-sm focus:outline-none focus:border-[#f08125] transition-all duration-300 hover:border-gray-400" style="border-bottom-width:1px;">
+                                    <label class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-medium transition-colors duration-300 group-focus-within/field:text-[#f08125]">Nombre *</label>
+                                    <input type="text" required placeholder="Tu nombre" class="form-field-gsc bg-white border-0 border-b border-gray-200 px-0 py-2.5 text-sm focus:outline-none focus:border-[#f08125] transition-all duration-300 hover:border-gray-400" style="border-bottom-width:1px;">
                                 </div>
                                 <div class="flex flex-col group/field">
                                     <label class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-medium transition-colors duration-300 group-focus-within/field:text-[#f08125]">Email *</label>
                                     <input type="email" placeholder="ejemplo@mail.cl" class="form-field-gsc bg-white border-0 border-b border-gray-200 px-0 py-2.5 text-sm focus:outline-none focus:border-[#f08125] transition-all duration-300 hover:border-gray-400" style="border-bottom-width:1px;" required>
                                 </div>
                             </div>
-                            <div class="flex flex-col group/field">
-                                <label class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-medium transition-colors duration-300 group-focus-within/field:text-[#f08125]">Tipo de proyecto</label>
-                                <select class="bg-white border-0 border-b border-gray-200 px-0 py-2.5 text-sm text-gray-500 focus:outline-none focus:border-[#f08125] transition-all duration-300 hover:border-gray-400 appearance-none w-full" style="border-bottom-width:1px;font-family:'Inter',sans-serif;">
-                                    <option value="" disabled selected>Selecciona una categoría</option>
-                                    <option>Eventos y Ferias</option>
-                                    <option>Stand</option>
-                                    <option>Rental</option>
-                                    <option>Implementación Gráfica</option>
-                                    <option>Otros</option>
-                                </select>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                                <div class="flex flex-col group/field">
+                                    <label class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-medium transition-colors duration-300 group-focus-within/field:text-[#f08125]">Teléfono <span class="text-gray-300 normal-case tracking-normal">(opcional)</span></label>
+                                    <div class="flex items-center bg-white border-0 border-b border-gray-200 focus-within:border-[#f08125] hover:border-gray-400 transition-all duration-300" style="border-bottom-width:1px;">
+                                        <span class="text-sm text-gray-400 py-2.5 pr-2 select-none whitespace-nowrap flex-shrink-0">+56&nbsp;9</span>
+                                        <input type="tel" inputmode="numeric" maxlength="8" placeholder="1234 5678" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)" class="form-field-gsc bg-white border-0 px-0 py-2.5 text-sm focus:outline-none w-full">
+                                    </div>
+                                </div>
+                                <div class="flex flex-col group/field">
+                                    <label class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-medium transition-colors duration-300 group-focus-within/field:text-[#f08125]">Tipo de proyecto <span class="text-gray-300 normal-case tracking-normal">(opcional)</span></label>
+                                    <select class="bg-white border-0 border-b border-gray-200 px-0 py-2.5 text-sm text-gray-500 focus:outline-none focus:border-[#f08125] transition-all duration-300 hover:border-gray-400 appearance-none w-full" style="border-bottom-width:1px;font-family:'Inter',sans-serif;">
+                                        <option value="" disabled selected>Selecciona una categoría</option>
+                                        <option>Eventos y Ferias</option>
+                                        <option>Stand</option>
+                                        <option>Rental</option>
+                                        <option>Implementación Gráfica</option>
+                                        <option>Otros</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="flex flex-col group/field">
                                 <label class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-medium transition-colors duration-300 group-focus-within/field:text-[#f08125]">Mensaje *</label>
@@ -1725,10 +1717,21 @@
                 const contactSent = ref(false);
                 const contactSuccessPopup = ref(null);
                 const contactFormError = ref('');
-                function submitContactForm(event) {
-                    const form = event.target;
-                    const email = form.querySelector('input[type="email"]');
+                let contactSending = false;
+                async function submitContactForm(event) {
+                    const form    = event.target;
+                    const nombre  = form.querySelector('input[type="text"]');
+                    const email   = form.querySelector('input[type="email"]');
+                    const tel     = form.querySelector('input[type="tel"]');
+                    const tipo    = form.querySelector('select');
                     const message = form.querySelector('textarea');
+
+                    // Campos OBLIGATORIOS: Nombre, Email y Mensaje
+                    if (!nombre.value.trim()) {
+                        contactFormError.value = 'Por favor escribe tu nombre.';
+                        nombre.focus();
+                        return;
+                    }
                     if (!email.value.trim() || !email.checkValidity()) {
                         contactFormError.value = 'Por favor ingresa un email válido.';
                         email.focus();
@@ -1739,12 +1742,55 @@
                         message.focus();
                         return;
                     }
+                    // Teléfono OPCIONAL: si escriben algo, deben ser 8 dígitos
+                    const telDigits = (tel && tel.value) ? tel.value.replace(/\D/g, '') : '';
+                    if (telDigits.length > 0 && telDigits.length !== 8) {
+                        contactFormError.value = 'El teléfono debe tener 8 dígitos (después del +56 9).';
+                        tel.focus();
+                        return;
+                    }
+
                     contactFormError.value = '';
-                    contactSent.value = true;
-                    form.reset();
-                    nextTick(() => {
-                        if (contactSuccessPopup.value) contactSuccessPopup.value.focus();
-                    });
+                    if (contactSending) return;
+                    contactSending = true;
+
+                    const telefonoFinal = telDigits ? ('+569' + telDigits) : 'No indicado';
+                    const tipoFinal = (tipo && tipo.value) ? tipo.value : 'No indicado';
+
+                    // Datos que llegan a Odoo (info@delon.odoo.com) a través de Web3Forms
+                    const payload = {
+                        access_key: '02b51e27-9a17-46fa-b535-12a89d94c4fb', // 👈 PEGA AQUÍ tu clave gratuita de web3forms.com
+                        subject: 'Nuevo lead web - ' + tipoFinal + ' - ' + nombre.value.trim(),
+                        from_name: 'Web En Paralelo',
+                        replyto: email.value.trim(),
+                        Nombre: nombre.value.trim(),
+                        Email: email.value.trim(),
+                        Telefono: telefonoFinal,
+                        'Tipo de proyecto': tipoFinal,
+                        Mensaje: message.value.trim()
+                    };
+
+                    try {
+                        const resp = await fetch('https://api.web3forms.com/submit', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await resp.json();
+                        if (!data.success) throw new Error(data.message || 'Envío rechazado');
+
+                        // Éxito: mismo popup de confirmación de siempre
+                        contactSent.value = true;
+                        form.reset();
+                        nextTick(() => {
+                            if (contactSuccessPopup.value) contactSuccessPopup.value.focus();
+                        });
+                    } catch (err) {
+                        console.error('Error enviando el formulario:', err);
+                        contactFormError.value = 'No pudimos enviar tu mensaje. Intenta nuevamente o escríbenos por correo.';
+                    } finally {
+                        contactSending = false;
+                    }
                 }
                 function closeContactPopup() {
                     contactSent.value = false;
@@ -2715,7 +2761,7 @@
             }
             // Navegar a sección proyectos suavemente
             var target = document.getElementById('proyectos');
-            if (target) target.scrollIntoView({ behavior: 'smooth' });
+            if (target) target.scrollIntoView();
         });
     </script>
     <!-- Cursor adaptativo + barra de scroll (fuera de Vue) -->
@@ -2850,27 +2896,6 @@
                 return Math.min(header.offsetHeight, 84);
             }
 
-            function easeOutBack(t) {
-                var c1 = 1.15, c3 = c1 + 1;
-                return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-            }
-
-            function animatedScrollTo(targetY, duration) {
-                var startY = window.scrollY;
-                var distance = targetY - startY;
-                var startTime = null;
-
-                function step(timestamp) {
-                    if (!startTime) startTime = timestamp;
-                    var elapsed = timestamp - startTime;
-                    var progress = Math.min(elapsed / duration, 1);
-                    var eased = prefersReduced ? progress : easeOutBack(progress);
-                    window.scrollTo(0, startY + distance * eased);
-                    if (progress < 1) requestAnimationFrame(step);
-                }
-                requestAnimationFrame(step);
-            }
-
             document.addEventListener('click', function(e) {
                 var link = e.target.closest('a[href^="#"]');
                 if (!link) return;
@@ -2901,60 +2926,10 @@
                 var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
                 if (maxScroll - targetY < window.innerHeight * 0.9) targetY = maxScroll;
                 targetY = Math.max(0, Math.min(targetY, maxScroll));
-                animatedScrollTo(targetY, prefersReduced ? 1 : 900);
+                window.scrollTo({ top: targetY, behavior: prefersReduced ? 'auto' : 'smooth' });
             }, false);
         })();
 
-        // ── Scroll con inercia en escritorio (evita sensación de scroll "cuadriculado") ─────────────────
-        (function() {
-            var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            var isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-            if (prefersReduced || !isDesktop) return;
-
-            var current = window.scrollY;
-            var target = window.scrollY;
-            var rafId = null;
-            var isAnimating = false;
-            var ease = 0.16;
-
-            function maxScroll() {
-                return document.documentElement.scrollHeight - window.innerHeight;
-            }
-
-            function onWheel(e) {
-                if (e.ctrlKey) return;
-                if (document.body.classList.contains('modal-scroll-lock')) return;
-                e.preventDefault();
-                target = Math.max(0, Math.min(target + e.deltaY, maxScroll()));
-                if (!rafId) rafId = requestAnimationFrame(tick);
-            }
-
-            function tick() {
-                isAnimating = true;
-                current += (target - current) * ease;
-                if (Math.abs(target - current) < 0.5) {
-                    current = target;
-                    window.scrollTo(0, current);
-                    rafId = null;
-                    isAnimating = false;
-                    return;
-                }
-                window.scrollTo(0, current);
-                rafId = requestAnimationFrame(tick);
-            }
-
-            function syncFromNative() {
-                if (isAnimating) return;
-                current = window.scrollY;
-                target = window.scrollY;
-            }
-
-            window.addEventListener('wheel', onWheel, { passive: false });
-            window.addEventListener('scroll', syncFromNative, { passive: true });
-            window.addEventListener('resize', function() {
-                target = Math.max(0, Math.min(target, maxScroll()));
-            });
-        })();
     </script>
 
 </body>
